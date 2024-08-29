@@ -30,24 +30,20 @@ function getURLsFromHTML(htmlBody, baseURL) {
 };
 
 async function crawlPage(baseURL, currentURL = baseURL, pages={}) {
-    //console.log(`Crawling ${currentURL}`)
     if (!currentURL.includes(baseURL)) {
-        //console.log('Not part of the team')
         return pages
     }
 
     const urlNormalized = normalizeURL(currentURL)
     
 
-    if (pages[urlNormalized] > 0) {
+    if (pages[urlNormalized] >0) {
         pages[urlNormalized]++
         return pages
     }
     
     pages[urlNormalized] = 1
     
-
-   
     const htmlBody = await fetchPage(currentURL)
     const urlsFromHtml = getURLsFromHTML(htmlBody,currentURL) 
     for (let url of urlsFromHtml) {
