@@ -16,7 +16,6 @@ function getURLsFromHTML(htmlBody, baseURL) {
     const dom = new JSDOM(htmlBody);
     const urslList = [];
     const anchorsList = dom.window.document.querySelectorAll('a');
-
     for (let anchor of anchorsList) {
         try {
             new URL(anchor.href)
@@ -26,12 +25,61 @@ function getURLsFromHTML(htmlBody, baseURL) {
             urslList.push(fullURL)
         }
     }
-
     return urslList
-
-
 
 };
 
-export {normalizeURL};
-export {getURLsFromHTML};
+async function crawlPage(baseURL, currentURL = baseURL, pages={}) {
+    //console.log(`Crawling ${currentURL}`)
+    if (!currentURL.includes(baseURL)) {
+        //console.log('Not part of the team')
+        return pages
+    }
+
+    const urlNormalized = normalizeURL(currentURL)
+    
+
+    if (pages[urlNormalized] > 0) {
+        pages[urlNormalized]++
+        return pages
+    }
+    
+    pages[urlNormalized] = 1
+    
+
+   
+    const htmlBody = await fetchPage(currentURL)
+    const urlsFromHtml = getURLsFromHTML(htmlBody,currentURL) 
+    for (let url of urlsFromHtml) {
+        pages = await crawlPage(baseURL, url, pages)
+        }
+    
+    return pages
+}
+
+
+
+
+
+async function fetchPage(currentURL) {
+    try {
+        const response = await fetch(currentURL);
+        const contentType = response.headers.get("content-type")
+
+        if (!contentType.includes('text/html')) {
+            console.log("Not html")
+            return
+        }
+        if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`)
+        }
+
+        const htmlBody = await response.text()
+        return htmlBody
+
+    } catch(err) {
+        console.log(err.message)
+    }
+}
+
+export {normalizeURL, getURLsFromHTML,crawlPage};
